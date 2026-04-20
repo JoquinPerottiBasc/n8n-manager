@@ -1,0 +1,120 @@
+{
+  "updatedAt": "2026-03-26T15:30:31.255Z",
+  "createdAt": "2026-03-26T02:39:35.923Z",
+  "id": "HlBkU6yEgacjGxeP",
+  "name": "waha",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -80
+      ],
+      "id": "96ad9c22-9e9d-48f8-9329-a1cfced969d4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=Walter",
+        "chatId": "=120363423628324162@g.us",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        480,
+        -80
+      ],
+      "id": "6fda0a14-6d5b-43c5-8f84-a6111c0e6d46",
+      "name": "Send a text message",
+      "credentials": {
+        "wahaApi": {
+          "id": "6VUKGGv2GVQEzNfc",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Contacts",
+        "operation": "Check Exists",
+        "session": "=Walter",
+        "phone": "543385437684",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        256,
+        -80
+      ],
+      "id": "d5e111cc-62a2-4a1a-ab42-cafec1a62b90",
+      "name": "Get chats overview. Includes all necessary things to build UI \"your chats overview\" page - chat id, name, picture, last message. Sorting by last message timestamp",
+      "credentials": {
+        "wahaApi": {
+          "id": "6VUKGGv2GVQEzNfc",
+          "name": "WAHA account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get chats overview. Includes all necessary things to build UI \"your chats overview\" page - chat id, name, picture, last message. Sorting by last message timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chats overview. Includes all necessary things to build UI \"your chats overview\" page - chat id, name, picture, last message. Sorting by last message timestamp": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ba7caa54-b234-4064-9646-56a8fdcfa1d2",
+  "activeVersionId": null,
+  "versionCounter": 9,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-26T02:39:35.926Z",
+      "createdAt": "2026-03-26T02:39:35.926Z",
+      "role": "workflow:owner",
+      "workflowId": "HlBkU6yEgacjGxeP",
+      "projectId": "TYMFv5h6fTijoUZW",
+      "project": {
+        "updatedAt": "2026-03-16T18:59:34.103Z",
+        "createdAt": "2026-03-16T18:55:18.232Z",
+        "id": "TYMFv5h6fTijoUZW",
+        "name": "Joaquin Perotti <perottijoaquin44@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "3b58124b-3713-43dc-86d7-47dc2bb3b2a8"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

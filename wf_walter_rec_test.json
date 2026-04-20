@@ -1,0 +1,1383 @@
+{
+  "updatedAt": "2026-03-26T17:31:21.363Z",
+  "createdAt": "2026-03-26T17:21:22.676Z",
+  "id": "mHfB2UZEWHItraVW",
+  "name": "Recordatorios Walter",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a1b2c3d4-e5f6-4789-abcd-ef1234567890",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst utcYear = now.getUTCFullYear();\nconst utcMonth = now.getUTCMonth();\nconst utcDate = now.getUTCDate();\n\n// Mañana a las 00:00 en Buenos Aires (UTC-3 = 03:00 UTC)\nconst tomorrowInBA = new Date(Date.UTC(utcYear, utcMonth, utcDate + 1, 3, 0, 0));\n\nconst yyyy = tomorrowInBA.getUTCFullYear();\nconst mm = String(tomorrowInBA.getUTCMonth() + 1).padStart(2, '0');\nconst dd = String(tomorrowInBA.getUTCDate()).padStart(2, '0');\nconst isoBA = `${yyyy}-${mm}-${dd}T00:00:00-03:00`;\n\nreturn [{ json: { tomorrow: isoBA } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "b2c3d4e5-f6a7-4890-bcde-f12345678901",
+      "name": "Mañana Buenos Aires"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fmt-date-0001",
+              "name": "tomorrow",
+              "value": "={{ $json.tomorrow.toDateTime().format('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "c3d4e5f6-a7b8-4901-cdef-123456789012",
+      "name": "Formatear fecha"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dentalink.healthatom.com/api/v1/citas/estados",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "nombre",
+              "value": "Avisado por WhatsApp"
+            },
+            {
+              "name": "color",
+              "value": "#a8d5e2"
+            },
+            {
+              "name": "anulacion",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        832,
+        0
+      ],
+      "id": "d4e5f6a7-b8c9-4012-def0-234567890123",
+      "name": "Crear estado Avisado",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wzfHZKUHVXeAYCsb",
+          "name": "Dentalink"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.dentalink.healthatom.com/api/v1/citas/estados",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "e5f6a7b8-c9d0-4123-ef01-345678901234",
+      "name": "Obtener estados",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wzfHZKUHVXeAYCsb",
+          "name": "Dentalink"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const estados = $input.first().json.data || [];\nconst estado = estados.find(e => e.nombre === 'Avisado por WhatsApp');\nif (!estado) {\n  throw new Error(\"Estado 'Avisado por WhatsApp' no encontrado en Dentalink\");\n}\nconst tomorrow = $('Formatear fecha').first().json.tomorrow;\nreturn [{ json: { id_estado: estado.id, tomorrow: tomorrow } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "f6a7b8c9-d0e1-4234-f012-456789012345",
+      "name": "Encontrar ID estado"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.dentalink.healthatom.com/api/v1/citas",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={\"fecha\":{\"lk\":\"{{ $json.tomorrow }}\"}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1456,
+        0
+      ],
+      "id": "a7b8c9d0-e1f2-4345-0123-567890123456",
+      "name": "Buscar cita",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wzfHZKUHVXeAYCsb",
+          "name": "Dentalink"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        0
+      ],
+      "id": "b8c9d0e1-f2a3-4456-1234-678901234567",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "filter-c001",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Cancelado",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "filter-c002",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Cambio de fecha",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "filter-c003",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Cambiado por IA wpp",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "filter-c004",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Cancelado por IA wpp",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "filter-c005",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Avisado por WhatsApp",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1872,
+        0
+      ],
+      "id": "c9d0e1f2-a3b4-4567-2345-789012345678",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2080,
+        0
+      ],
+      "id": "d0e1f2a3-b4c5-4678-3456-890123456789",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.dentalink.healthatom.com/api/v1/pacientes/{{ $json.id_paciente }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2288,
+        0
+      ],
+      "id": "e1f2a3b4-c5d6-4789-4567-901234567890",
+      "name": "bucar paciente",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wzfHZKUHVXeAYCsb",
+          "name": "Dentalink"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const celular = $json.data?.celular || '';\nlet digits = celular.replace(/[^\\d]/g, '');\n\nif (digits.startsWith('549') && digits.length >= 12) {\n  // Formato correcto: 549XXXXXXXXXX\n} else if (digits.startsWith('54') && digits.length >= 12) {\n  // Tiene código país pero falta el 9\n  digits = '549' + digits.slice(2);\n} else if (digits.startsWith('9') && digits.length === 11) {\n  // Tiene 9 pero falta código país\n  digits = '54' + digits;\n} else if (digits.startsWith('0') && digits.length >= 10) {\n  // Formato local con 0 al inicio\n  digits = '549' + digits.slice(1);\n} else if (digits.length === 10) {\n  // Solo código de área + número\n  digits = '549' + digits;\n}\n\nreturn [{ json: { ...$json, telefono_normalizado: digits } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        0
+      ],
+      "id": "f2a3b4c5-d6e7-4890-5678-012345678901",
+      "name": "Normalizar teléfono"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2704,
+        0
+      ],
+      "id": "a3b4c5d6-e7f8-4901-6789-123456789012",
+      "name": "Wait",
+      "webhookId": "walter-rec-0001-0002-0003-000400050006"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=Walter",
+        "chatId": "={{ $('Verificar teléfono').item.json.chatId }}",
+        "text": "=Hola {{ $('bucar paciente').item.json.data.nombre }}👋 Te recuerdo tu cita para mañana a las {{ $('Loop Over Items').item.json.hora_inicio }} con el Dr. {{ $('Loop Over Items').item.json.nombre_dentista }} en la clínica 🦷✨ ¿Me confirmás si podés asistir?",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        2912,
+        0
+      ],
+      "id": "b4c5d6e7-f8a9-4012-789a-234567890123",
+      "name": "Enviar WAHA",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "wahaApi": {
+          "id": "6VUKGGv2GVQEzNfc",
+          "name": "WAHA account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.dentalink.healthatom.com/api/v1/citas/{{ $('Loop Over Items').item.json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id_estado",
+              "value": "={{ $('Encontrar ID estado').first().json.id_estado }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3120,
+        0
+      ],
+      "id": "c5d6e7f8-a9b0-4123-89ab-345678901234",
+      "name": "cambiar estado",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wzfHZKUHVXeAYCsb",
+          "name": "Dentalink"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "ai",
+              "message": "=Hola {{ $('bucar paciente').item.json.data.nombre }}👋 Te recuerdo tu cita para mañana a las {{ $('Loop Over Items').item.json.hora_inicio }} con el Dr. {{ $('Loop Over Items').item.json.nombre_dentista }} en la clínica 🦷✨ ¿Me confirmás si podés asistir?\n\n[Id paciente:{{ $('Loop Over Items').item.json.id_paciente }}, Id_cita:{{ $('Loop Over Items').item.json.id }}]"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        3328,
+        0
+      ],
+      "id": "d6e7f8a9-b0c1-4234-9abc-456789012345",
+      "name": "Chat Memory Manager"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=+{{ $('Enviar WAHA').item.json.key.remoteJid.replaceAll(\"@s.whatsapp.net\",\"\") }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        3328,
+        208
+      ],
+      "id": "e7f8a9b0-c1d2-4345-abcd-567890123456",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "U4VgHFJ9gg5COOoQ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3680,
+        0
+      ],
+      "id": "6faa418e-4e46-4045-a33d-b6c22493f8f6",
+      "name": "Wait1",
+      "webhookId": "a8863dc8-d3c4-4c84-b294-50a1b5fbd31c"
+    },
+    {
+      "parameters": {
+        "resource": "Contacts",
+        "operation": "Check Exists",
+        "session": "=Walter",
+        "phone": "={{ $('Normalizar teléfono').item.json.telefono_normalizado }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        2600,
+        0
+      ],
+      "id": "c1d2e3f4-a5b6-4789-cdef-012345678901",
+      "name": "Verificar teléfono",
+      "credentials": {
+        "wahaApi": {
+          "id": "6VUKGGv2GVQEzNfc",
+          "name": "WAHA account"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Mañana Buenos Aires",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mañana Buenos Aires": {
+      "main": [
+        [
+          {
+            "node": "Formatear fecha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear fecha": {
+      "main": [
+        [
+          {
+            "node": "Crear estado Avisado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear estado Avisado": {
+      "main": [
+        [
+          {
+            "node": "Obtener estados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener estados": {
+      "main": [
+        [
+          {
+            "node": "Encontrar ID estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encontrar ID estado": {
+      "main": [
+        [
+          {
+            "node": "Buscar cita",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar cita": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "bucar paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bucar paciente": {
+      "main": [
+        [
+          {
+            "node": "Normalizar teléfono",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar teléfono": {
+      "main": [
+        [
+          {
+            "node": "Verificar teléfono",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Enviar WAHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar WAHA": {
+      "main": [
+        [
+          {
+            "node": "cambiar estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cambiar estado": {
+      "main": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory Manager": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar teléfono": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Argentina/Buenos_Aires",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-03-26T14:26:53.007-03:00",
+          "Readable date": "March 26th 2026, 2:26:53 pm",
+          "Readable time": "2:26:53 pm",
+          "Day of week": "Thursday",
+          "Year": "2026",
+          "Month": "March",
+          "Day of month": "26",
+          "Hour": "14",
+          "Minute": "26",
+          "Second": "53",
+          "Timezone": "America/Argentina/Buenos_Aires (UTC-03:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "8d823d72-d7e1-48b7-87c8-259acf182fa1",
+  "activeVersionId": "8d823d72-d7e1-48b7-87c8-259acf182fa1",
+  "versionCounter": 28,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-26T17:21:22.684Z",
+      "createdAt": "2026-03-26T17:21:22.684Z",
+      "role": "workflow:owner",
+      "workflowId": "mHfB2UZEWHItraVW",
+      "projectId": "TYMFv5h6fTijoUZW",
+      "project": {
+        "updatedAt": "2026-03-16T18:59:34.103Z",
+        "createdAt": "2026-03-16T18:55:18.232Z",
+        "id": "TYMFv5h6fTijoUZW",
+        "name": "Joaquin Perotti <perottijoaquin44@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "3b58124b-3713-43dc-86d7-47dc2bb3b2a8"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-26T17:31:24.000Z",
+    "createdAt": "2026-03-26T17:31:21.364Z",
+    "versionId": "8d823d72-d7e1-48b7-87c8-259acf182fa1",
+    "workflowId": "mHfB2UZEWHItraVW",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 12
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          224,
+          0
+        ],
+        "id": "a1b2c3d4-e5f6-4789-abcd-ef1234567890",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "jsCode": "const now = new Date();\nconst utcYear = now.getUTCFullYear();\nconst utcMonth = now.getUTCMonth();\nconst utcDate = now.getUTCDate();\n\n// Mañana a las 00:00 en Buenos Aires (UTC-3 = 03:00 UTC)\nconst tomorrowInBA = new Date(Date.UTC(utcYear, utcMonth, utcDate + 1, 3, 0, 0));\n\nconst yyyy = tomorrowInBA.getUTCFullYear();\nconst mm = String(tomorrowInBA.getUTCMonth() + 1).padStart(2, '0');\nconst dd = String(tomorrowInBA.getUTCDate()).padStart(2, '0');\nconst isoBA = `${yyyy}-${mm}-${dd}T00:00:00-03:00`;\n\nreturn [{ json: { tomorrow: isoBA } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          0
+        ],
+        "id": "b2c3d4e5-f6a7-4890-bcde-f12345678901",
+        "name": "Mañana Buenos Aires"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "fmt-date-0001",
+                "name": "tomorrow",
+                "value": "={{ $json.tomorrow.toDateTime().format('yyyy-MM-dd') }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          624,
+          0
+        ],
+        "id": "c3d4e5f6-a7b8-4901-cdef-123456789012",
+        "name": "Formatear fecha"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.dentalink.healthatom.com/api/v1/citas/estados",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "nombre",
+                "value": "Avisado por WhatsApp"
+              },
+              {
+                "name": "color",
+                "value": "#a8d5e2"
+              },
+              {
+                "name": "anulacion",
+                "value": "0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          832,
+          0
+        ],
+        "id": "d4e5f6a7-b8c9-4012-def0-234567890123",
+        "name": "Crear estado Avisado",
+        "alwaysOutputData": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "wzfHZKUHVXeAYCsb",
+            "name": "Dentalink"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "url": "https://api.dentalink.healthatom.com/api/v1/citas/estados",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1040,
+          0
+        ],
+        "id": "e5f6a7b8-c9d0-4123-ef01-345678901234",
+        "name": "Obtener estados",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "wzfHZKUHVXeAYCsb",
+            "name": "Dentalink"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const estados = $input.first().json.data || [];\nconst estado = estados.find(e => e.nombre === 'Avisado por WhatsApp');\nif (!estado) {\n  throw new Error(\"Estado 'Avisado por WhatsApp' no encontrado en Dentalink\");\n}\nconst tomorrow = $('Formatear fecha').first().json.tomorrow;\nreturn [{ json: { id_estado: estado.id, tomorrow: tomorrow } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1248,
+          0
+        ],
+        "id": "f6a7b8c9-d0e1-4234-f012-456789012345",
+        "name": "Encontrar ID estado"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.dentalink.healthatom.com/api/v1/citas",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "q",
+                "value": "={\"fecha\":{\"lk\":\"{{ $json.tomorrow }}\"}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1456,
+          0
+        ],
+        "id": "a7b8c9d0-e1f2-4345-0123-567890123456",
+        "name": "Buscar cita",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "wzfHZKUHVXeAYCsb",
+            "name": "Dentalink"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "data",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1664,
+          0
+        ],
+        "id": "b8c9d0e1-f2a3-4456-1234-678901234567",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "filter-c001",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Cancelado",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "filter-c002",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Cambio de fecha",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "filter-c003",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Cambiado por IA wpp",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "filter-c004",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Cancelado por IA wpp",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "filter-c005",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Avisado por WhatsApp",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          1872,
+          0
+        ],
+        "id": "c9d0e1f2-a3b4-4567-2345-789012345678",
+        "name": "Filter"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          2080,
+          0
+        ],
+        "id": "d0e1f2a3-b4c5-4678-3456-890123456789",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.dentalink.healthatom.com/api/v1/pacientes/{{ $json.id_paciente }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2288,
+          0
+        ],
+        "id": "e1f2a3b4-c5d6-4789-4567-901234567890",
+        "name": "bucar paciente",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "wzfHZKUHVXeAYCsb",
+            "name": "Dentalink"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const celular = $json.data?.celular || '';\nlet digits = celular.replace(/[^\\d]/g, '');\n\nif (digits.startsWith('549') && digits.length >= 12) {\n  // Formato correcto: 549XXXXXXXXXX\n} else if (digits.startsWith('54') && digits.length >= 12) {\n  // Tiene código país pero falta el 9\n  digits = '549' + digits.slice(2);\n} else if (digits.startsWith('9') && digits.length === 11) {\n  // Tiene 9 pero falta código país\n  digits = '54' + digits;\n} else if (digits.startsWith('0') && digits.length >= 10) {\n  // Formato local con 0 al inicio\n  digits = '549' + digits.slice(1);\n} else if (digits.length === 10) {\n  // Solo código de área + número\n  digits = '549' + digits;\n}\n\nreturn [{ json: { ...$json, telefono_normalizado: digits } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2496,
+          0
+        ],
+        "id": "f2a3b4c5-d6e7-4890-5678-012345678901",
+        "name": "Normalizar teléfono"
+      },
+      {
+        "parameters": {
+          "amount": 3
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2704,
+          0
+        ],
+        "id": "a3b4c5d6-e7f8-4901-6789-123456789012",
+        "name": "Wait",
+        "webhookId": "walter-rec-0001-0002-0003-000400050006"
+      },
+      {
+        "parameters": {
+          "resource": "Chatting",
+          "operation": "Send Text",
+          "session": "=Walter",
+          "chatId": "={{ $('Normalizar teléfono').item.json.telefono_normalizado }}@c.us",
+          "text": "=Hola {{ $('bucar paciente').item.json.data.nombre }}👋 Te recuerdo tu cita para mañana a las {{ $('Loop Over Items').item.json.hora_inicio }} con el Dr. {{ $('Loop Over Items').item.json.nombre_dentista }} en la clínica 🦷✨ ¿Me confirmás si podés asistir?",
+          "requestOptions": {}
+        },
+        "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+        "typeVersion": 202502,
+        "position": [
+          2912,
+          0
+        ],
+        "id": "b4c5d6e7-f8a9-4012-789a-234567890123",
+        "name": "Enviar WAHA",
+        "alwaysOutputData": false,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "credentials": {
+          "wahaApi": {
+            "id": "6VUKGGv2GVQEzNfc",
+            "name": "WAHA account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://api.dentalink.healthatom.com/api/v1/citas/{{ $('Loop Over Items').item.json.id }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "id_estado",
+                "value": "={{ $('Encontrar ID estado').first().json.id_estado }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3120,
+          0
+        ],
+        "id": "c5d6e7f8-a9b0-4123-89ab-345678901234",
+        "name": "cambiar estado",
+        "alwaysOutputData": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "wzfHZKUHVXeAYCsb",
+            "name": "Dentalink"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "mode": "insert",
+          "messages": {
+            "messageValues": [
+              {
+                "type": "ai",
+                "message": "=Hola {{ $('bucar paciente').item.json.data.nombre }}👋 Te recuerdo tu cita para mañana a las {{ $('Loop Over Items').item.json.hora_inicio }} con el Dr. {{ $('Loop Over Items').item.json.nombre_dentista }} en la clínica 🦷✨ ¿Me confirmás si podés asistir?\n\n[Id paciente:{{ $('Loop Over Items').item.json.id_paciente }}, Id_cita:{{ $('Loop Over Items').item.json.id }}]"
+              }
+            ]
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryManager",
+        "typeVersion": 1.1,
+        "position": [
+          3328,
+          0
+        ],
+        "id": "d6e7f8a9-b0c1-4234-9abc-456789012345",
+        "name": "Chat Memory Manager"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "=+{{ $('Enviar WAHA').item.json.key.remoteJid.replaceAll(\"@s.whatsapp.net\",\"\") }}"
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          3328,
+          208
+        ],
+        "id": "e7f8a9b0-c1d2-4345-abcd-567890123456",
+        "name": "Postgres Chat Memory",
+        "credentials": {
+          "postgres": {
+            "id": "U4VgHFJ9gg5COOoQ",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 1,
+          "unit": "minutes"
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3680,
+          0
+        ],
+        "id": "6faa418e-4e46-4045-a33d-b6c22493f8f6",
+        "name": "Wait1",
+        "webhookId": "a8863dc8-d3c4-4c84-b294-50a1b5fbd31c"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Mañana Buenos Aires",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mañana Buenos Aires": {
+        "main": [
+          [
+            {
+              "node": "Formatear fecha",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Formatear fecha": {
+        "main": [
+          [
+            {
+              "node": "Crear estado Avisado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Crear estado Avisado": {
+        "main": [
+          [
+            {
+              "node": "Obtener estados",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Obtener estados": {
+        "main": [
+          [
+            {
+              "node": "Encontrar ID estado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Encontrar ID estado": {
+        "main": [
+          [
+            {
+              "node": "Buscar cita",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar cita": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [],
+          [
+            {
+              "node": "bucar paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "bucar paciente": {
+        "main": [
+          [
+            {
+              "node": "Normalizar teléfono",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalizar teléfono": {
+        "main": [
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "Enviar WAHA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar WAHA": {
+        "main": [
+          [
+            {
+              "node": "cambiar estado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "cambiar estado": {
+        "main": [
+          [
+            {
+              "node": "Chat Memory Manager",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Chat Memory Manager": {
+        "main": [
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Postgres Chat Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Chat Memory Manager",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Joaquin Perotti",
+    "name": "Version 8d823d72",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-26T17:31:24.190Z",
+        "id": 167,
+        "workflowId": "mHfB2UZEWHItraVW",
+        "versionId": "8d823d72-d7e1-48b7-87c8-259acf182fa1",
+        "event": "activated",
+        "userId": "3b58124b-3713-43dc-86d7-47dc2bb3b2a8"
+      }
+    ]
+  }
+}

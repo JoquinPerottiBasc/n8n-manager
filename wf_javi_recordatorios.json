@@ -1,0 +1,1271 @@
+{
+  "updatedAt": "2026-03-12T17:21:45.193Z",
+  "createdAt": "2025-12-08T20:46:15.862Z",
+  "id": "hruXm932XZ9lP635",
+  "name": "Recordatorios",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c8cf4ae1-8b6d-46c9-9381-1ea0b8ff9eda",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.dentalink.healthatom.com/api/v1/citas",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={\"fecha\":{\"lk\":\"{{ $json.tomorrow }}\"}} "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        848,
+        0
+      ],
+      "id": "b77899f7-8dfd-4a9a-a0d7-9ff985a40fb1",
+      "name": "Buscar cita",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FwhpWIj31y6zlYD0",
+          "name": "DENTALINK"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now.format('yyyy-MM-dd') }}",
+        "duration": 1,
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -560
+      ],
+      "id": "ad97864f-fc7e-4c5a-9b10-d680e81a7275",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\n\n// Obtenemos la fecha UTC actual\nconst utcYear = now.getUTCFullYear();\nconst utcMonth = now.getUTCMonth();\nconst utcDate = now.getUTCDate();\n\n// Creamos \"mañana\" a las 00:00 en Hermosillo (UTC-7 es 07:00 UTC)\nconst tomorrowInHermosillo = new Date(Date.UTC(utcYear, utcMonth, utcDate + 1, 7, 0, 0));\n\n// Armamos el string ISO con offset -07:00\nconst yyyy = tomorrowInHermosillo.getUTCFullYear();\nconst mm = String(tomorrowInHermosillo.getUTCMonth() + 1).padStart(2, '0');\nconst dd = String(tomorrowInHermosillo.getUTCDate()).padStart(2, '0');\nconst hh = \"00\";\nconst min = \"00\";\nconst ss = \"00\";\nconst isoHermosillo = `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}-07:00`;\n\nreturn [{ json: { tomorrow: isoHermosillo } }];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "638c1ce9-e075-4f75-97ea-014ad033488a",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f0db4410-250a-4b90-9602-31440cace0ed",
+              "name": "tomorrow",
+              "value": "={{ $json.tomorrow.toDateTime().format('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "149945cc-a640-4002-aa0d-f5e47e2cbb79",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        0
+      ],
+      "id": "6d274b14-ac35-4c1b-bdf5-b9e2e58ea659",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1824,
+        0
+      ],
+      "id": "f6b93623-18b1-42c0-b8f9-0d2daec249b5",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2448,
+        32
+      ],
+      "id": "1a603281-af17-4bfd-8056-3e1d2634c615",
+      "name": "Wait",
+      "webhookId": "c5cc9dab-c8a2-4235-981a-9323bf67503c"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "ai",
+              "message": "=Hola {{ $('bucar paciente').item.json.data.nombre }}👋 Te recuerdo tu cita para mañana a las {{ $('Loop Over Items').item.json.hora_inicio }} con el Dr. {{ $('Loop Over Items').item.json.nombre_dentista }} en Boca Nova Clínica Dental 🦷✨ ¿Me confirmas si podrás asistir?\n\n[Id  paciente:{{ $('Loop Over Items').item.json.id_paciente }}, Id_cita:{{ $('Loop Over Items').item.json.id }}]"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        3472,
+        32
+      ],
+      "id": "e88017d6-bacf-41af-9cae-5ee4eb39cb1a",
+      "name": "Chat Memory Manager"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=+{{ $('Enviar texto').item.json.data.key.remoteJid.replaceAll(\"@s.whatsapp.net\",\"\") }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        3488,
+        240
+      ],
+      "id": "1edad19c-7823-4db2-b5aa-ad3e6d92b558",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "hB2kwczSBbldz60C",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Javi",
+        "remoteJid": "={{ $('bucar paciente').first().json.data.celular.replaceAll(\"+\",\"\").replaceAll(\" \",\"\") }}",
+        "messageText": "=Hola {{ $json.data.nombre }}👋 Te recuerdo tu cita para mañana a las {{ $('Loop Over Items').item.json.hora_inicio }} con el Dr. {{ $('Loop Over Items').item.json.nombre_dentista }} en Boca Nova Clínica Dental 🦷✨ ¿Me confirmas si podrás asistir?",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        32
+      ],
+      "id": "15501ac8-d553-44a6-8c7f-ff7b393234e4",
+      "name": "Enviar texto",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "evolutionApi": {
+          "id": "1Uo7v3rlSd6AINbB",
+          "name": "Javi"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "chat-api",
+        "instanceName": "Javi",
+        "numbers": "={{ \"526561388310 \"  }}"
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        -544
+      ],
+      "id": "2aba844c-b10d-44c5-9429-d5f7afe8e1c7",
+      "name": "Verificar n mero no whats app",
+      "alwaysOutputData": true,
+      "credentials": {
+        "evolutionApi": {
+          "id": "1Uo7v3rlSd6AINbB",
+          "name": "Javi"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.dentalink.healthatom.com/api/v1/pacientes/{{ $json.id_paciente }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2192,
+        32
+      ],
+      "id": "23e32346-1496-42d5-a77c-12d1a665f3d7",
+      "name": "bucar paciente",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FwhpWIj31y6zlYD0",
+          "name": "DENTALINK"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7cc6a57b-a2bb-4b70-89a9-ddd1d7bfb7b4",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Cancelado",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "5c834ef6-aa07-4a95-8b1c-9e81abd21417",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Cambio de fecha",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "900848c2-fbe1-4fe5-956b-870fa79693f7",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Cambiado por IA wpp",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "93a1ea95-d677-4f3e-b4c5-341ffba3726b",
+              "leftValue": "={{ $json.estado_cita }}",
+              "rightValue": "Cancelado por IA wpp",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "e449fed1-2dc1-45c1-99c8-e701dfe91dfb",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.dentalink.healthatom.com/api/v1/citas/{{ $('Loop Over Items').item.json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id_estado",
+              "value": "24"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3168,
+        0
+      ],
+      "id": "13d20665-e845-4019-9eb9-3b31e9b20092",
+      "name": "cambiar estado",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FwhpWIj31y6zlYD0",
+          "name": "DENTALINK"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.dentalink.healthatom.com/api/v1/citas/{{ $('Loop Over Items').item.json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id_estado",
+              "value": "26"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3184,
+        320
+      ],
+      "id": "ca08ddfb-d706-4d45-9c6d-f1321b632ba9",
+      "name": "cambiar estado1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FwhpWIj31y6zlYD0",
+          "name": "DENTALINK"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://javi-clinica-n8n.xn1onk.easypanel.host/webhook/2dd79efa-d1ad-49ba-88b0-e4018fecde18-resaña",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1264,
+        -672
+      ],
+      "id": "c19029b7-3045-435a-a803-1615b86e05a5",
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Buscar cita",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar cita": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "bucar paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory Manager": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto": {
+      "main": [
+        [
+          {
+            "node": "cambiar estado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cambiar estado1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bucar paciente": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cambiar estado": {
+      "main": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cambiar estado1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Ciudad_Juarez",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Verificar n mero no whats app": [
+      {
+        "json": {
+          "success": true,
+          "data": [
+            {
+              "jid": "5216561388310@s.whatsapp.net",
+              "exists": true,
+              "number": "526561388310",
+              "lid": "lid"
+            }
+          ]
+        }
+      }
+    ],
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-12-21T12:00:14.015-07:00",
+          "Readable date": "December 21st 2025, 12:00:14 pm",
+          "Readable time": "12:00:14 pm",
+          "Day of week": "Sunday",
+          "Year": "2025",
+          "Month": "December",
+          "Day of month": "21",
+          "Hour": "12",
+          "Minute": "00",
+          "Second": "14",
+          "Timezone": "America/Ciudad_Juarez (UTC-07:00)"
+        }
+      }
+    ]
+  },
+  "versionId": "2c38bc42-3b58-4b4f-bf1a-7af32dfad5ff",
+  "activeVersionId": "e6aa1d47-272d-4d2f-81c6-e5665285863a",
+  "versionCounter": 73,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-08T20:46:15.865Z",
+      "createdAt": "2025-12-08T20:46:15.865Z",
+      "role": "workflow:owner",
+      "workflowId": "hruXm932XZ9lP635",
+      "projectId": "3hooNAuP2Z1CfSUL",
+      "project": {
+        "updatedAt": "2025-11-13T15:47:40.396Z",
+        "createdAt": "2025-11-13T14:03:44.776Z",
+        "id": "3hooNAuP2Z1CfSUL",
+        "name": "Joaquin Perotti <perottijoaquin44@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "a2c2963b-88b5-4422-8f95-b9fd917e5bdb",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-11-13T14:03:44.776Z",
+            "createdAt": "2025-11-13T14:03:44.776Z",
+            "userId": "a2c2963b-88b5-4422-8f95-b9fd917e5bdb",
+            "projectId": "3hooNAuP2Z1CfSUL",
+            "user": {
+              "updatedAt": "2026-03-26T14:34:22.000Z",
+              "createdAt": "2025-11-13T14:03:44.405Z",
+              "id": "a2c2963b-88b5-4422-8f95-b9fd917e5bdb",
+              "email": "perottijoaquin44@gmail.com",
+              "firstName": "Joaquin",
+              "lastName": "Perotti",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-11-13T15:48:17.933Z",
+                "personalization_survey_n8n_version": "1.119.1",
+                "companySize": "<20",
+                "companyType": "saas",
+                "role": "business-owner",
+                "reportedSource": "youtube"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "32FypHt4vvD1zzAj",
+                "userActivatedAt": 1763055497132,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1764875044845
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-26",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-12T15:54:20.000Z",
+    "createdAt": "2026-03-12T15:54:18.585Z",
+    "versionId": "e6aa1d47-272d-4d2f-81c6-e5665285863a",
+    "workflowId": "hruXm932XZ9lP635",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 12
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          224,
+          0
+        ],
+        "id": "c8cf4ae1-8b6d-46c9-9381-1ea0b8ff9eda",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.dentalink.healthatom.com/api/v1/citas",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "q",
+                "value": "={\"fecha\":{\"lk\":\"{{ $json.tomorrow }}\"}} "
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          848,
+          0
+        ],
+        "id": "b77899f7-8dfd-4a9a-a0d7-9ff985a40fb1",
+        "name": "Buscar cita",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "FwhpWIj31y6zlYD0",
+            "name": "DENTALINK"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "addToDate",
+          "magnitude": "={{ $now.format('yyyy-MM-dd') }}",
+          "duration": 1,
+          "options": {
+            "includeInputFields": false
+          }
+        },
+        "type": "n8n-nodes-base.dateTime",
+        "typeVersion": 2,
+        "position": [
+          288,
+          -560
+        ],
+        "id": "ad97864f-fc7e-4c5a-9b10-d680e81a7275",
+        "name": "Date & Time"
+      },
+      {
+        "parameters": {
+          "jsCode": "const now = new Date();\n\n// Obtenemos la fecha UTC actual\nconst utcYear = now.getUTCFullYear();\nconst utcMonth = now.getUTCMonth();\nconst utcDate = now.getUTCDate();\n\n// Creamos \"mañana\" a las 00:00 en Hermosillo (UTC-7 es 07:00 UTC)\nconst tomorrowInHermosillo = new Date(Date.UTC(utcYear, utcMonth, utcDate + 1, 7, 0, 0));\n\n// Armamos el string ISO con offset -07:00\nconst yyyy = tomorrowInHermosillo.getUTCFullYear();\nconst mm = String(tomorrowInHermosillo.getUTCMonth() + 1).padStart(2, '0');\nconst dd = String(tomorrowInHermosillo.getUTCDate()).padStart(2, '0');\nconst hh = \"00\";\nconst min = \"00\";\nconst ss = \"00\";\nconst isoHermosillo = `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}-07:00`;\n\nreturn [{ json: { tomorrow: isoHermosillo } }];\n\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          0
+        ],
+        "id": "638c1ce9-e075-4f75-97ea-014ad033488a",
+        "name": "Code"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "f0db4410-250a-4b90-9602-31440cace0ed",
+                "name": "tomorrow",
+                "value": "={{ $json.tomorrow.toDateTime().format('yyyy-MM-dd') }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          624,
+          0
+        ],
+        "id": "149945cc-a640-4002-aa0d-f5e47e2cbb79",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "data",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1168,
+          0
+        ],
+        "id": "6d274b14-ac35-4c1b-bdf5-b9e2e58ea659",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1824,
+          0
+        ],
+        "id": "f6b93623-18b1-42c0-b8f9-0d2daec249b5",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "amount": 3
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2448,
+          32
+        ],
+        "id": "1a603281-af17-4bfd-8056-3e1d2634c615",
+        "name": "Wait",
+        "webhookId": "c5cc9dab-c8a2-4235-981a-9323bf67503c"
+      },
+      {
+        "parameters": {
+          "mode": "insert",
+          "messages": {
+            "messageValues": [
+              {
+                "type": "ai",
+                "message": "=Hola {{ $('bucar paciente').item.json.data.nombre }}👋 Te recuerdo tu cita para mañana a las {{ $('Loop Over Items').item.json.hora_inicio }} con el Dr. {{ $('Loop Over Items').item.json.nombre_dentista }} en Boca Nova Clínica Dental 🦷✨ ¿Me confirmas si podrás asistir?\n\n[Id  paciente:{{ $('Loop Over Items').item.json.id_paciente }}, Id_cita:{{ $('Loop Over Items').item.json.id }}]"
+              }
+            ]
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryManager",
+        "typeVersion": 1.1,
+        "position": [
+          3472,
+          32
+        ],
+        "id": "e88017d6-bacf-41af-9cae-5ee4eb39cb1a",
+        "name": "Chat Memory Manager"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "=+{{ $('Enviar texto').item.json.data.key.remoteJid.replaceAll(\"@s.whatsapp.net\",\"\") }}"
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          3488,
+          240
+        ],
+        "id": "1edad19c-7823-4db2-b5aa-ad3e6d92b558",
+        "name": "Postgres Chat Memory",
+        "credentials": {
+          "postgres": {
+            "id": "hB2kwczSBbldz60C",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "messages-api",
+          "instanceName": "Javi",
+          "remoteJid": "={{ $('bucar paciente').first().json.data.celular.replaceAll(\"+\",\"\").replaceAll(\" \",\"\") }}",
+          "messageText": "=Hola {{ $json.data.nombre }}👋 Te recuerdo tu cita para mañana a las {{ $('Loop Over Items').item.json.hora_inicio }} con el Dr. {{ $('Loop Over Items').item.json.nombre_dentista }} en Boca Nova Clínica Dental 🦷✨ ¿Me confirmas si podrás asistir?",
+          "options_message": {}
+        },
+        "type": "n8n-nodes-evolution-api.evolutionApi",
+        "typeVersion": 1,
+        "position": [
+          2800,
+          32
+        ],
+        "id": "15501ac8-d553-44a6-8c7f-ff7b393234e4",
+        "name": "Enviar texto",
+        "alwaysOutputData": false,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "credentials": {
+          "evolutionApi": {
+            "id": "1Uo7v3rlSd6AINbB",
+            "name": "Javi"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "resource": "chat-api",
+          "instanceName": "Javi",
+          "numbers": "={{ \"526561388310 \"  }}"
+        },
+        "type": "n8n-nodes-evolution-api.evolutionApi",
+        "typeVersion": 1,
+        "position": [
+          2352,
+          -544
+        ],
+        "id": "2aba844c-b10d-44c5-9429-d5f7afe8e1c7",
+        "name": "Verificar n mero no whats app",
+        "alwaysOutputData": true,
+        "credentials": {
+          "evolutionApi": {
+            "id": "1Uo7v3rlSd6AINbB",
+            "name": "Javi"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.dentalink.healthatom.com/api/v1/pacientes/{{ $json.id_paciente }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2192,
+          32
+        ],
+        "id": "23e32346-1496-42d5-a77c-12d1a665f3d7",
+        "name": "bucar paciente",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "FwhpWIj31y6zlYD0",
+            "name": "DENTALINK"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "7cc6a57b-a2bb-4b70-89a9-ddd1d7bfb7b4",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Cancelado",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "5c834ef6-aa07-4a95-8b1c-9e81abd21417",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Cambio de fecha",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "900848c2-fbe1-4fe5-956b-870fa79693f7",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Cambiado por IA wpp",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "93a1ea95-d677-4f3e-b4c5-341ffba3726b",
+                "leftValue": "={{ $json.estado_cita }}",
+                "rightValue": "Cancelado por IA wpp",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          1376,
+          0
+        ],
+        "id": "e449fed1-2dc1-45c1-99c8-e701dfe91dfb",
+        "name": "Filter"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://api.dentalink.healthatom.com/api/v1/citas/{{ $('Loop Over Items').item.json.id }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "id_estado",
+                "value": "24"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3168,
+          0
+        ],
+        "id": "13d20665-e845-4019-9eb9-3b31e9b20092",
+        "name": "cambiar estado",
+        "alwaysOutputData": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "FwhpWIj31y6zlYD0",
+            "name": "DENTALINK"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://api.dentalink.healthatom.com/api/v1/citas/{{ $('Loop Over Items').item.json.id }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "id_estado",
+                "value": "26"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3184,
+          320
+        ],
+        "id": "ca08ddfb-d706-4d45-9c6d-f1321b632ba9",
+        "name": "cambiar estado1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "FwhpWIj31y6zlYD0",
+            "name": "DENTALINK"
+          }
+        },
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Buscar cita",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar cita": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [],
+          [
+            {
+              "node": "bucar paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "Enviar texto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Postgres Chat Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Chat Memory Manager",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Chat Memory Manager": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar texto": {
+        "main": [
+          [
+            {
+              "node": "cambiar estado",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "cambiar estado1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "bucar paciente": {
+        "main": [
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "cambiar estado": {
+        "main": [
+          [
+            {
+              "node": "Chat Memory Manager",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "cambiar estado1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Joaquin Perotti",
+    "name": "Version e6aa1d47",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-12T15:54:20.487Z",
+        "id": 32,
+        "workflowId": "hruXm932XZ9lP635",
+        "versionId": "e6aa1d47-272d-4d2f-81c6-e5665285863a",
+        "event": "activated",
+        "userId": "a2c2963b-88b5-4422-8f95-b9fd917e5bdb"
+      }
+    ]
+  }
+}

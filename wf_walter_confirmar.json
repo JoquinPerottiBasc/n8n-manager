@@ -1,0 +1,340 @@
+{
+  "updatedAt": "2026-03-19T16:25:01.309Z",
+  "createdAt": "2026-03-17T15:38:26.898Z",
+  "id": "rX3fEJ2791oAwDkT",
+  "name": "Confirmar cita",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Id_cita"
+            }
+          ]
+        }
+      },
+      "id": "030d2f90-c01d-48ad-9782-9891e9e4307a",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        320,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.dentalink.healthatom.com/api/v1/citas/{{ $json.Id_cita }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id_estado",
+              "value": "23"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        528,
+        464
+      ],
+      "id": "8d60b2ee-1855-4d42-bfd7-aa4c996c7a17",
+      "name": "Confirmar",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wzfHZKUHVXeAYCsb",
+          "name": "Dentalink"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.dentalink.healthatom.com/api/v1/citas/estados",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "43f4106e-b32d-4b83-9adf-f1b0fd1f7a05",
+      "name": "Estados",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wzfHZKUHVXeAYCsb",
+          "name": "Dentalink"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dentalink.healthatom.com/api/v1/citas/estados",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "nombre",
+              "value": "Anulado por reprogramación Bot"
+            },
+            {
+              "name": "color",
+              "value": "#f5b6a1"
+            },
+            {
+              "name": "anulacion",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        544,
+        208
+      ],
+      "id": "2f2107d5-b4c6-4f52-baf7-4c0135d93ddd",
+      "name": "Estados1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wzfHZKUHVXeAYCsb",
+          "name": "Dentalink"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "Id_cita": "4472"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "bbd04934-8484-4758-9b96-08777269ea4a",
+  "activeVersionId": "bbd04934-8484-4758-9b96-08777269ea4a",
+  "versionCounter": 47,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-17T15:38:26.900Z",
+      "createdAt": "2026-03-17T15:38:26.900Z",
+      "role": "workflow:owner",
+      "workflowId": "rX3fEJ2791oAwDkT",
+      "projectId": "TYMFv5h6fTijoUZW",
+      "project": {
+        "updatedAt": "2026-03-16T18:59:34.103Z",
+        "createdAt": "2026-03-16T18:55:18.232Z",
+        "id": "TYMFv5h6fTijoUZW",
+        "name": "Joaquin Perotti <perottijoaquin44@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "3b58124b-3713-43dc-86d7-47dc2bb3b2a8"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-19T16:25:06.000Z",
+    "createdAt": "2026-03-19T16:25:01.312Z",
+    "versionId": "bbd04934-8484-4758-9b96-08777269ea4a",
+    "workflowId": "rX3fEJ2791oAwDkT",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "Id_cita"
+              }
+            ]
+          }
+        },
+        "id": "030d2f90-c01d-48ad-9782-9891e9e4307a",
+        "typeVersion": 1.1,
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          320,
+          464
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://api.dentalink.healthatom.com/api/v1/citas/{{ $json.Id_cita }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "id_estado",
+                "value": "23"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          528,
+          464
+        ],
+        "id": "8d60b2ee-1855-4d42-bfd7-aa4c996c7a17",
+        "name": "Confirmar",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "wzfHZKUHVXeAYCsb",
+            "name": "Dentalink"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "https://api.dentalink.healthatom.com/api/v1/citas/estados",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          224,
+          208
+        ],
+        "id": "43f4106e-b32d-4b83-9adf-f1b0fd1f7a05",
+        "name": "Estados",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "wzfHZKUHVXeAYCsb",
+            "name": "Dentalink"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.dentalink.healthatom.com/api/v1/citas/estados",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "nombre",
+                "value": "Anulado por reprogramación Bot"
+              },
+              {
+                "name": "color",
+                "value": "#f5b6a1"
+              },
+              {
+                "name": "anulacion",
+                "value": "1"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          544,
+          208
+        ],
+        "id": "2f2107d5-b4c6-4f52-baf7-4c0135d93ddd",
+        "name": "Estados1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "wzfHZKUHVXeAYCsb",
+            "name": "Dentalink"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Confirmar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Joaquin Perotti",
+    "name": "Version bbd04934",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-19T16:25:06.898Z",
+        "id": 89,
+        "workflowId": "rX3fEJ2791oAwDkT",
+        "versionId": "bbd04934-8484-4758-9b96-08777269ea4a",
+        "event": "activated",
+        "userId": "3b58124b-3713-43dc-86d7-47dc2bb3b2a8"
+      }
+    ]
+  }
+}

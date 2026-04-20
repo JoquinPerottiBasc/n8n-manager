@@ -1,0 +1,830 @@
+{
+  "updatedAt": "2026-03-26T15:32:04.081Z",
+  "createdAt": "2026-03-17T15:39:18.454Z",
+  "id": "K51BJF5bdMMKu0Ox",
+  "name": "Apagar bot",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Conversation id"
+            },
+            {
+              "name": "URL"
+            },
+            {
+              "name": "Token"
+            },
+            {
+              "name": "Motivo"
+            },
+            {
+              "name": "inbox"
+            },
+            {
+              "name": "telefono"
+            }
+          ]
+        }
+      },
+      "id": "6a4f70c0-8438-4fb4-bd2c-927d756ed5d5",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.URL }}/api/v1/accounts/1/conversations/{{ $json[\"Conversation id\"] }}/labels",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "={{ $json.Token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"labels\": [\n    \"apagado\"\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        496,
+        432
+      ],
+      "id": "ab416722-f4d5-4ae9-92ca-904ed69c7e5f",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7bfccbd3-faad-4d89-934a-64bfa07eccd3",
+              "name": "Mensaje:  ",
+              "value": "Transferido a persona del equipo con exito, pronto lo contactaran",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        432
+      ],
+      "id": "856d1345-35e3-44c1-83eb-a53427a0832b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Javi",
+        "remoteJid": "120363405943292544@g.us",
+        "messageText": "=🔔 Bot apagado – Atención requerida\n\n📱 Teléfono: {{ $('When Executed by Another Workflow').item.json.telefono }}\n\n\n📝 Motivo:\n{{ $('When Executed by Another Workflow').item.json.Motivo }}\n\n➡️ Acceso directo a la conversación:\nhttps://javi-clinica-chatwoot.xn1onk.easypanel.host/app/accounts/1/inbox/{{\n $('When Executed by Another Workflow').item.json.inbox }}/conversations/{{ $('When Executed by Another Workflow').item.json[\"Conversation id\"] }}\n",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        976,
+        144
+      ],
+      "id": "f7c30d14-3a90-4319-b32d-5deeb525a27f",
+      "name": "Enviar texto",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "afK1dPOH9bwtPCHY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/afK1dPOH9bwtPCHY",
+          "cachedResultName": "Esperar 2 dias y prender"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Conver_id": "={{ $('When Executed by Another Workflow').item.json[\"Conversation id\"] }}",
+            "url": "={{ $('When Executed by Another Workflow').item.json.URL }}",
+            "Token": "={{ $('When Executed by Another Workflow').item.json.Token }}",
+            "Inbox": "={{ $('When Executed by Another Workflow').item.json.inbox }}",
+            "tel": "={{ $('When Executed by Another Workflow').item.json.telefono }}"
+          },
+          "matchingColumns": [
+            ""
+          ],
+          "schema": [
+            {
+              "id": "Conver_id",
+              "displayName": "Conver_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Token",
+              "displayName": "Token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Inbox",
+              "displayName": "Inbox",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "tel",
+              "displayName": "tel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1008,
+        432
+      ],
+      "id": "78235f18-36de-4b7b-b870-2712c0cb334e",
+      "name": "Call 'My Sub-Workflow 7'"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.URL }}/api/v1/accounts/1/conversations/{{ $json['Conversation id'] }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "={{ $json.Token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "=En este caso, el bot se apagaría y se enviaría una notificación al equipo por un grupo para continuar la conversación.\n\nEste es un mensaje automático de prueba. La memoria del bot fue reiniciada para que puedas volver a probarlo desde el inicio cuando quieras."
+            },
+            {
+              "name": "message_type",
+              "value": "outgoing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        512,
+        256
+      ],
+      "id": "eb732190-6bf1-4e26-9617-9f6c9707a719",
+      "name": "HTTP Request",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "n8n_chat_histories",
+          "mode": "list",
+          "cachedResultName": "n8n_chat_histories"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "session_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.telefono }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        704,
+        256
+      ],
+      "id": "4281b274-4777-4b9f-8adf-9152ce1f9b3a",
+      "name": "memoria",
+      "credentials": {
+        "postgres": {
+          "id": "U4VgHFJ9gg5COOoQ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "=Walter",
+        "chatId": "=120363423628324162@g.us",
+        "text": "=🔔 Bot apagado – Atención requerida\n\n📱 Teléfono: {{ $('When Executed by Another Workflow').item.json.telefono }}\n\n\n📝 Motivo:\n{{ $('When Executed by Another Workflow').item.json.Motivo }}\n\n➡️ Acceso directo a la conversación:\n{{ $('When Executed by Another Workflow').item.json.URL }}app/accounts/1/inbox/{{\n $('When Executed by Another Workflow').item.json.inbox }}/conversations/{{ $('When Executed by Another Workflow').item.json[\"Conversation id\"] }}\n",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        752,
+        432
+      ],
+      "id": "90e97a0c-8f3f-4f7d-ab7c-7d9f83f26af3",
+      "name": "Send a text message",
+      "credentials": {
+        "wahaApi": {
+          "id": "6VUKGGv2GVQEzNfc",
+          "name": "WAHA account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto": {
+      "main": [
+        []
+      ]
+    },
+    "Call 'My Sub-Workflow 7'": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoria": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "memoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Call 'My Sub-Workflow 7'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "Conversation id": 4,
+          "URL": "https://walter-chatwoot.xn1onk.easypanel.host/",
+          "Token": "9HCq2r2icnQeSwQ99KXQpp81",
+          "Motivo": "Consulta por precio de tratamiento (implante). Requiere respuesta personalizada de Walter.",
+          "inbox": 1,
+          "telefono": "+5491178900795"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "HTTP Request": [
+      {
+        "json": {
+          "id": 388,
+          "content": "En este caso, el bot se apagaría y se enviaría una notificación al equipo por un grupo para continuar la conversación.\n\nEste es un mensaje automático de prueba. La memoria del bot fue reiniciada para que puedas volver a probarlo desde el inicio cuando quieras.",
+          "inbox_id": 1,
+          "conversation_id": 4,
+          "message_type": 1,
+          "content_type": "text",
+          "status": "sent",
+          "content_attributes": {},
+          "created_at": 1774525233,
+          "private": false,
+          "source_id": null,
+          "sender": {
+            "id": 1,
+            "name": "Joaquin Perotti",
+            "available_name": "Joaquin Perotti",
+            "avatar_url": "",
+            "type": "user",
+            "availability_status": "offline",
+            "thumbnail": ""
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "48190a18-dcf0-4954-8461-da357f1731dd",
+  "activeVersionId": "48190a18-dcf0-4954-8461-da357f1731dd",
+  "versionCounter": 39,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-17T15:39:18.459Z",
+      "createdAt": "2026-03-17T15:39:18.459Z",
+      "role": "workflow:owner",
+      "workflowId": "K51BJF5bdMMKu0Ox",
+      "projectId": "TYMFv5h6fTijoUZW",
+      "project": {
+        "updatedAt": "2026-03-16T18:59:34.103Z",
+        "createdAt": "2026-03-16T18:55:18.232Z",
+        "id": "TYMFv5h6fTijoUZW",
+        "name": "Joaquin Perotti <perottijoaquin44@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "3b58124b-3713-43dc-86d7-47dc2bb3b2a8"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-26T15:33:59.000Z",
+    "createdAt": "2026-03-26T15:32:04.083Z",
+    "versionId": "48190a18-dcf0-4954-8461-da357f1731dd",
+    "workflowId": "K51BJF5bdMMKu0Ox",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "Conversation id"
+              },
+              {
+                "name": "URL"
+              },
+              {
+                "name": "Token"
+              },
+              {
+                "name": "Motivo"
+              },
+              {
+                "name": "inbox"
+              },
+              {
+                "name": "telefono"
+              }
+            ]
+          }
+        },
+        "id": "6a4f70c0-8438-4fb4-bd2c-927d756ed5d5",
+        "typeVersion": 1.1,
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          272,
+          432
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $json.URL }}/api/v1/accounts/1/conversations/{{ $json[\"Conversation id\"] }}/labels",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "api_access_token",
+                "value": "={{ $json.Token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"labels\": [\n    \"apagado\"\n  ]\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          496,
+          432
+        ],
+        "id": "ab416722-f4d5-4ae9-92ca-904ed69c7e5f",
+        "name": "HTTP Request1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "7bfccbd3-faad-4d89-934a-64bfa07eccd3",
+                "name": "Mensaje:  ",
+                "value": "Transferido a persona del equipo con exito, pronto lo contactaran",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1216,
+          432
+        ],
+        "id": "856d1345-35e3-44c1-83eb-a53427a0832b",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "resource": "messages-api",
+          "instanceName": "Javi",
+          "remoteJid": "120363405943292544@g.us",
+          "messageText": "=🔔 Bot apagado – Atención requerida\n\n📱 Teléfono: {{ $('When Executed by Another Workflow').item.json.telefono }}\n\n\n📝 Motivo:\n{{ $('When Executed by Another Workflow').item.json.Motivo }}\n\n➡️ Acceso directo a la conversación:\nhttps://javi-clinica-chatwoot.xn1onk.easypanel.host/app/accounts/1/inbox/{{\n $('When Executed by Another Workflow').item.json.inbox }}/conversations/{{ $('When Executed by Another Workflow').item.json[\"Conversation id\"] }}\n",
+          "options_message": {}
+        },
+        "type": "n8n-nodes-evolution-api.evolutionApi",
+        "typeVersion": 1,
+        "position": [
+          976,
+          144
+        ],
+        "id": "f7c30d14-3a90-4319-b32d-5deeb525a27f",
+        "name": "Enviar texto",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "afK1dPOH9bwtPCHY",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/afK1dPOH9bwtPCHY",
+            "cachedResultName": "Esperar 2 dias y prender"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Conver_id": "={{ $('When Executed by Another Workflow').item.json[\"Conversation id\"] }}",
+              "url": "={{ $('When Executed by Another Workflow').item.json.URL }}",
+              "Token": "={{ $('When Executed by Another Workflow').item.json.Token }}",
+              "Inbox": "={{ $('When Executed by Another Workflow').item.json.inbox }}",
+              "tel": "={{ $('When Executed by Another Workflow').item.json.telefono }}"
+            },
+            "matchingColumns": [
+              ""
+            ],
+            "schema": [
+              {
+                "id": "Conver_id",
+                "displayName": "Conver_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "number",
+                "removed": false
+              },
+              {
+                "id": "url",
+                "displayName": "url",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "Token",
+                "displayName": "Token",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "Inbox",
+                "displayName": "Inbox",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "number",
+                "removed": false
+              },
+              {
+                "id": "tel",
+                "displayName": "tel",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {
+            "waitForSubWorkflow": false
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          1008,
+          432
+        ],
+        "id": "78235f18-36de-4b7b-b870-2712c0cb334e",
+        "name": "Call 'My Sub-Workflow 7'"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $json.URL }}/api/v1/accounts/1/conversations/{{ $json['Conversation id'] }}/messages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "api_access_token",
+                "value": "={{ $json.Token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "content",
+                "value": "=En este caso, el bot se apagaría y se enviaría una notificación al equipo por un grupo para continuar la conversación.\n\nEste es un mensaje automático de prueba. La memoria del bot fue reiniciada para que puedas volver a probarlo desde el inicio cuando quieras."
+              },
+              {
+                "name": "message_type",
+                "value": "outgoing"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          512,
+          256
+        ],
+        "id": "eb732190-6bf1-4e26-9617-9f6c9707a719",
+        "name": "HTTP Request",
+        "retryOnFail": true
+      },
+      {
+        "parameters": {
+          "operation": "deleteTable",
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "value": "n8n_chat_histories",
+            "mode": "list",
+            "cachedResultName": "n8n_chat_histories"
+          },
+          "deleteCommand": "delete",
+          "where": {
+            "values": [
+              {
+                "column": "session_id",
+                "value": "={{ $('When Executed by Another Workflow').item.json.telefono }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          704,
+          256
+        ],
+        "id": "4281b274-4777-4b9f-8adf-9152ce1f9b3a",
+        "name": "memoria",
+        "credentials": {
+          "postgres": {
+            "id": "U4VgHFJ9gg5COOoQ",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "Chatting",
+          "operation": "Send Text",
+          "session": "=Walter",
+          "chatId": "=120363423628324162@g.us",
+          "text": "=🔔 Bot apagado – Atención requerida\n\n📱 Teléfono: {{ $('When Executed by Another Workflow').item.json.telefono }}\n\n\n📝 Motivo:\n{{ $('When Executed by Another Workflow').item.json.Motivo }}\n\n➡️ Acceso directo a la conversación:\n{{ $('When Executed by Another Workflow').item.json.URL }}app/accounts/1/inbox/{{\n $('When Executed by Another Workflow').item.json.inbox }}/conversations/{{ $('When Executed by Another Workflow').item.json[\"Conversation id\"] }}\n",
+          "requestOptions": {}
+        },
+        "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+        "typeVersion": 202502,
+        "position": [
+          752,
+          432
+        ],
+        "id": "90e97a0c-8f3f-4f7d-ab7c-7d9f83f26af3",
+        "name": "Send a text message",
+        "credentials": {
+          "wahaApi": {
+            "id": "6VUKGGv2GVQEzNfc",
+            "name": "WAHA account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar texto": {
+        "main": [
+          []
+        ]
+      },
+      "Call 'My Sub-Workflow 7'": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "memoria": {
+        "main": [
+          []
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "memoria",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a text message": {
+        "main": [
+          [
+            {
+              "node": "Call 'My Sub-Workflow 7'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Joaquin Perotti",
+    "name": "Version 48190a18",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-26T15:33:59.398Z",
+        "id": 157,
+        "workflowId": "K51BJF5bdMMKu0Ox",
+        "versionId": "48190a18-dcf0-4954-8461-da357f1731dd",
+        "event": "activated",
+        "userId": "3b58124b-3713-43dc-86d7-47dc2bb3b2a8"
+      }
+    ]
+  }
+}

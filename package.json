@@ -1,0 +1,24 @@
+{
+  "name": "n8n-manager",
+  "version": "1.0.0",
+  "description": "CLI to manage multiple n8n instances for multi-client setups",
+  "type": "module",
+  "bin": {
+    "n8n-manager": "./bin/n8n-manager.js"
+  },
+  "scripts": {
+    "start": "node bin/n8n-manager.js"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.4.0",
+    "axios": "^1.7.9",
+    "chalk": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "commander": "^13.0.0",
+    "express": "^4.21.2",
+    "express-session": "^1.19.0",
+    "node-telegram-bot-api": "^0.66.0",
+    "open": "^10.1.0",
+    "ora": "^8.2.0"
+  }
+}

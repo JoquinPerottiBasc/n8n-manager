@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node bin/n8n-manager.js workflow list --client walter)"
+    ]
+  }
+}

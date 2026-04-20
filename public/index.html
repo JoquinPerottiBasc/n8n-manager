@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>n8n Manager</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3250;
+    --accent: #7c6af7;
+    --accent2: #5a4ed6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #7c85a0;
+    --radius: 8px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Topbar */
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 20px; height: 52px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .topbar h1 { font-size: 17px; font-weight: 700; color: var(--accent); letter-spacing: -0.3px; }
+  .topbar h1 span { color: var(--text); }
+
+  /* Layout */
+  .layout { display: flex; flex: 1; min-height: 0; }
+  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-header { padding: 14px 16px 10px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .client-list { flex: 1; overflow-y: auto; padding: 0 8px 8px; }
+  .client-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius); cursor: pointer; transition: background 0.15s; user-select: none; }
+  .client-item:hover { background: var(--surface2); }
+  .client-item.active { background: var(--accent); }
+  .client-item.active .client-name { color: #fff; }
+  .client-item.active .dot { background: #fff; }
+  .client-item.active .btn-remove { color: rgba(255,255,255,0.7); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; transition: background 0.3s; }
+  .dot.ok { background: var(--green); }
+  .dot.err { background: var(--red); }
+  .client-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+  .btn-remove { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px 4px; border-radius: 4px; font-size: 15px; line-height: 1; display: flex; align-items: center; }
+  .btn-remove:hover { color: var(--red); background: rgba(239,68,68,0.12); }
+
+  /* Main panel */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .main-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 10px; }
+  .main-empty svg { opacity: 0.3; }
+  .main-empty p { font-size: 15px; }
+
+  /* Panel content */
+  .panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .panel-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .panel-title { font-size: 15px; font-weight: 700; flex: 1; min-width: 120px; }
+  .panel-title span { color: var(--accent); }
+
+  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  input[type="text"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); padding: 6px 12px; font-size: 13px; outline: none; width: 200px; }
+  input[type="text"]:focus { border-color: var(--accent); }
+  .toggle-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: var(--radius); padding: 6px 12px; font-size: 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .toggle-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Table */
+  .table-wrap { flex: 1; overflow-y: auto; padding: 12px 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 1px solid var(--border); }
+  td { padding: 9px 12px; border-bottom: 1px solid rgba(46,50,80,0.5); vertical-align: middle; }
+  tr:hover td { background: var(--surface2); }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge.active { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge.inactive { background: rgba(124,133,160,0.15); color: var(--muted); }
+  .btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.activate { color: var(--green); border-color: rgba(34,197,94,0.3); }
+  .btn.activate:hover { background: rgba(34,197,94,0.1); }
+  .btn.deactivate { color: var(--yellow); border-color: rgba(245,158,11,0.3); }
+  .btn.deactivate:hover { background: rgba(245,158,11,0.1); }
+  .btn-primary { background: var(--accent); border: 1px solid var(--accent2); color: #fff; border-radius: var(--radius); padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: var(--accent2); }
+  .actions { display: flex; gap: 6px; }
+  .name-col { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Executions */
+  .exec-section { border-top: 1px solid var(--border); padding: 12px 20px 14px; max-height: 220px; display: flex; flex-direction: column; }
+  .exec-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .exec-list { overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .exec-item { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: var(--surface2); border-radius: 6px; font-size: 12px; }
+  .exec-badge { padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+  .exec-badge.error { background: rgba(239,68,68,0.2); color: var(--red); }
+  .exec-badge.success { background: rgba(34,197,94,0.15); color: var(--green); }
+  .exec-badge.running { background: rgba(124,101,247,0.2); color: var(--accent); }
+  .exec-badge.waiting { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .exec-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .exec-time { color: var(--muted); font-size: 11px; flex-shrink: 0; }
+  .loading { color: var(--muted); padding: 20px; text-align: center; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 440px; max-width: 95vw; }
+  .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input { width: 100%; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: var(--radius); padding: 7px 14px; font-size: 13px; cursor: pointer; }
+  .btn-cancel:hover { color: var(--text); border-color: var(--muted); }
+
+  /* Toast */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 200; pointer-events: none; }
+  .toast { padding: 10px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: opacity 0.25s, transform 0.25s; pointer-events: none; max-width: 340px; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: var(--green); }
+  .toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #f87171; }
+  .empty-state { padding: 40px; text-align: center; color: var(--muted); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Login overlay */
+  .login-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 1000; align-items: center; justify-content: center; }
+  .login-overlay.show { display: flex; }
+  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px; width: 380px; max-width: 95vw; }
+  .login-box h2 { font-size: 22px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .login-box p { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  .login-error { color: var(--red); font-size: 13px; margin-top: 12px; min-height: 18px; }
+  input[type="password"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); padding: 6px 12px; font-size: 13px; outline: none; width: 100%; }
+  input[type="password"]:focus { border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>⚙ n8n <span>Manager</span></h1>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="btn-cancel" id="logoutBtn" onclick="doLogout()" style="display:none;">Cerrar sesión</button>
+    <button class="btn-primary" onclick="openModal()">+ Agregar cliente</button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">Clientes</div>
+    <div class="client-list" id="clientList">
+      <div class="loading">Cargando...</div>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="main-empty" id="emptyState">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18M9 21V9"/>
+      </svg>
+      <p>Selecciona un cliente para ver sus workflows</p>
+    </div>
+    <div class="panel" id="panel" style="display:none">
+      <div class="panel-header">
+        <div class="panel-title">Workflows de: <span id="panelClientName"></span></div>
+        <div class="toolbar">
+          <input type="text" id="searchInput" placeholder="Buscar workflow..." oninput="filterWorkflows()">
+          <button class="toggle-btn" id="filterActiveBtn" onclick="toggleFilterActive()">Solo activos</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="workflowsBody"></tbody>
+        </table>
+      </div>
+      <div class="exec-section">
+        <div class="exec-title">
+          Ejecuciones recientes
+          <button class="toggle-btn" onclick="loadExecutions(currentClient)" style="font-size:11px;padding:3px 8px;">Actualizar</button>
+        </div>
+        <div class="exec-list" id="execList">
+          <div class="loading">Cargando...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal agregar cliente -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalIfBg(event)">
+  <div class="modal">
+    <h2>Agregar nuevo cliente</h2>
+    <div class="form-group">
+      <label>Nombre</label>
+      <input type="text" id="clientName" placeholder="ej: mi-empresa">
+    </div>
+    <div class="form-group">
+      <label>URL de n8n</label>
+      <input type="text" id="clientUrl" placeholder="https://n8n.miempresa.com">
+    </div>
+    <div class="form-group">
+      <label>API Key</label>
+      <input type="text" id="clientApiKey" placeholder="n8n_api_...">
+    </div>
+    <div id="modalError" style="color:var(--red);font-size:13px;min-height:18px;margin-top:4px;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" id="addBtn" onclick="addClient()">Conectar y guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Login overlay -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>⚙ n8n Manager</h2>
+    <p>Ingresá tus credenciales para continuar</p>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username" style="width:100%;">
+    </div>
+    <div class="form-group" style="margin-top:12px;">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()" style="width:100%;margin-top:16px;">Ingresar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<script>
+  let clients = [];
+  let currentClient = null;
+  let allWorkflows = [];
+  let filterActive = false;
+
+  // ── Init ──────────────────────────────────────────────
+  checkAuth();
+
+  async function loadClients() {
+    const res = await fetch('/api/clients');
+    clients = await res.json();
+    renderClients();
+  }
+
+  function renderClients() {
+    const el = document.getElementById('clientList');
+    if (clients.length === 0) {
+      el.innerHTML = '<div style="color:var(--muted);padding:12px 10px;font-size:12px;">Sin clientes. Agrega uno.</div>';
+      return;
+    }
+    el.innerHTML = clients.map(c => `
+      <div class="client-item ${currentClient === c.name ? 'active' : ''}" onclick="selectClient('${esc(c.name)}')">
+        <span class="dot" id="dot-${esc(c.name)}"></span>
+        <span class="client-name">${esc(c.name)}</span>
+        <button class="btn-remove" onclick="removeClient(event,'${esc(c.name)}')" title="Eliminar">✕</button>
+      </div>
+    `).join('');
+  }
+
+  // ── Client selection ──────────────────────────────────
+  async function selectClient(name) {
+    currentClient = name;
+    renderClients();
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('panel').style.display = 'flex';
+    document.getElementById('panel').style.flexDirection = 'column';
+    document.getElementById('panelClientName').textContent = name;
+    document.getElementById('workflowsBody').innerHTML = '<tr><td colspan="4" class="loading">Cargando workflows...</td></tr>';
+    document.getElementById('execList').innerHTML = '<div class="loading">Cargando...</div>';
+    await Promise.all([loadWorkflows(name), loadExecutions(name)]);
+  }
+
+  // ── Workflows ─────────────────────────────────────────
+  async function loadWorkflows(name) {
+    const dot = document.getElementById(`dot-${name}`);
+    try {
+      const res = await fetch(`/api/clients/${encodeURIComponent(name)}/workflows`);
+      if (!res.ok) throw new Error((await res.json()).error);
+      allWorkflows = await res.json();
+      if (dot) dot.classList.add('ok');
+      renderWorkflows();
+    } catch (err) {
+      if (dot) { dot.classList.remove('ok'); dot.classList.add('err'); }
+      document.getElementById('workflowsBody').innerHTML = `<tr><td colspan="4" style="color:var(--red);padding:20px;">Error: ${esc(err.message)}</td></tr>`;
+    }
+  }
+
+  function filterWorkflows() {
+    renderWorkflows();
+  }
+
+  function toggleFilterActive() {
+    filterActive = !filterActive;
+    const btn = document.getElementById('filterActiveBtn');
+    btn.classList.toggle('on', filterActive);
+    renderWorkflows();
+  }
+
+  function renderWorkflows() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    let list = allWorkflows;
+    if (filterActive) list = list.filter(w => w.active);
+    if (q) list = list.filter(w => (w.name || '').toLowerCase().includes(q) || String(w.id).includes(q));
+
+    if (list.length === 0) {
+      document.getElementById('workflowsBody').innerHTML = '<tr><td colspan="4" class="empty-state">Sin resultados</td></tr>';
+      return;
+    }
+    document.getElementById('workflowsBody').innerHTML = list.map(w => `
+      <tr>
+        <td style="color:var(--muted);font-size:12px;">${esc(String(w.id))}</td>
+        <td class="name-col">${esc(w.name || '(sin nombre)')}</td>
+        <td>
+          <span class="badge ${w.active ? 'active' : 'inactive'}">
+            ${w.active ? '● Activo' : '○ Inactivo'}
+          </span>
+        </td>
+        <td>
+          <div class="actions">
+            ${w.active
+              ? `<button class="btn deactivate" onclick="toggleWorkflow('${esc(currentClient)}','${esc(String(w.id))}',false)">Desactivar</button>`
+              : `<button class="btn activate" onclick="toggleWorkflow('${esc(currentClient)}','${esc(String(w.id))}',true)">Activar</button>`
+            }
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function toggleWorkflow(clientName, id, activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    try {
+      const res = await fetch(`/api/clients/${encodeURIComponent(clientName)}/workflows/${encodeURIComponent(id)}/${action}`, { method: 'POST' });
+      if (!res.ok) throw new Error((await res.json()).error);
+      toast(activate ? 'Workflow activado' : 'Workflow desactivado', 'success');
+      await loadWorkflows(clientName);
+    } catch (err) {
+      toast(`Error: ${err.message}`, 'error');
+    }
+  }
+
+  // ── Executions ────────────────────────────────────────
+  async function loadExecutions(name) {
+    try {
+      const res = await fetch(`/api/clients/${encodeURIComponent(name)}/executions?limit=20`);
+      if (!res.ok) throw new Error((await res.json()).error);
+      const execs = await res.json();
+      renderExecutions(execs);
+    } catch (err) {
+      document.getElementById('execList').innerHTML = `<div style="color:var(--muted);font-size:12px;padding:8px;">No se pudieron cargar ejecuciones</div>`;
+    }
+  }
+
+  function renderExecutions(execs) {
+    const el = document.getElementById('execList');
+    if (!execs || execs.length === 0) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px;">Sin ejecuciones recientes</div>';
+      return;
+    }
+    el.innerHTML = execs.map(e => {
+      const status = e.status || (e.finished ? (e.stoppedAt ? 'error' : 'success') : 'running');
+      const badgeClass = status === 'error' ? 'error' : status === 'success' ? 'success' : status === 'running' ? 'running' : 'waiting';
+      const label = status === 'error' ? 'Error' : status === 'success' ? 'OK' : status === 'running' ? 'Corriendo' : 'Esperando';
+      const name = e.workflowData?.name || e.workflowName || `ID ${e.workflowId || '?'}`;
+      const timeStr = e.startedAt ? relativeTime(e.startedAt) : '';
+      return `<div class="exec-item">
+        <span class="exec-badge ${badgeClass}">${label}</span>
+        <span class="exec-name">${esc(name)}</span>
+        <span class="exec-time">${timeStr}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function relativeTime(isoStr) {
+    const diff = Date.now() - new Date(isoStr).getTime();
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return 'hace ' + s + 's';
+    const m = Math.floor(s / 60);
+    if (m < 60) return 'hace ' + m + 'm';
+    const h = Math.floor(m / 60);
+    if (h < 24) return 'hace ' + h + 'h';
+    return 'hace ' + Math.floor(h / 24) + 'd';
+  }
+
+  // ── Remove client ─────────────────────────────────────
+  async function removeClient(event, name) {
+    event.stopPropagation();
+    if (!confirm(`¿Eliminar el cliente "${name}"?`)) return;
+    try {
+      const res = await fetch(`/api/clients/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json()).error);
+      if (currentClient === name) {
+        currentClient = null;
+        document.getElementById('emptyState').style.display = 'flex';
+        document.getElementById('panel').style.display = 'none';
+      }
+      await loadClients();
+      toast(`Cliente "${name}" eliminado`, 'success');
+    } catch (err) {
+      toast(`Error: ${err.message}`, 'error');
+    }
+  }
+
+  // ── Add client modal ──────────────────────────────────
+  function openModal() {
+    document.getElementById('modalOverlay').classList.add('show');
+    document.getElementById('clientName').focus();
+    document.getElementById('modalError').textContent = '';
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('show');
+    document.getElementById('clientName').value = '';
+    document.getElementById('clientUrl').value = '';
+    document.getElementById('clientApiKey').value = '';
+    document.getElementById('modalError').textContent = '';
+  }
+
+  function closeModalIfBg(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  async function addClient() {
+    const name = document.getElementById('clientName').value.trim();
+    const url = document.getElementById('clientUrl').value.trim();
+    const apiKey = document.getElementById('clientApiKey').value.trim();
+    const errEl = document.getElementById('modalError');
+    if (!name || !url || !apiKey) { errEl.textContent = 'Todos los campos son obligatorios'; return; }
+    const btn = document.getElementById('addBtn');
+    btn.disabled = true; btn.textContent = 'Conectando...';
+    errEl.textContent = '';
+    try {
+      const res = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, url, apiKey }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      closeModal();
+      await loadClients();
+      toast(`Cliente "${name}" agregado correctamente`, 'success');
+    } catch (err) {
+      errEl.textContent = err.message;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Conectar y guardar';
+    }
+  }
+
+  // Enter key en modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Enter' && document.getElementById('modalOverlay').classList.contains('show')) addClient();
+  });
+
+  // ── Toast ──────────────────────────────────────────────
+  function toast(msg, type = 'success') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.getElementById('toastContainer').appendChild(el);
+    requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 300);
+    }, 3000);
+  }
+
+  // ── Escape helper ──────────────────────────────────────
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ── Auth ──────────────────────────────────────────────
+  async function checkAuth() {
+    const res = await fetch('/auth/status');
+    const { authEnabled, authenticated } = await res.json();
+    if (!authenticated) {
+      document.getElementById('loginOverlay').classList.add('show');
+    } else {
+      document.getElementById('loginOverlay').classList.remove('show');
+      if (authEnabled) document.getElementById('logoutBtn').style.display = '';
+      loadClients();
+    }
+  }
+
+  async function doLogin() {
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value;
+    const errEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Ingresando...';
+    errEl.textContent = '';
+    try {
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      document.getElementById('loginOverlay').classList.remove('show');
+      document.getElementById('logoutBtn').style.display = '';
+      loadClients();
+    } catch (err) {
+      errEl.textContent = err.message;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Ingresar';
+    }
+  }
+
+  async function doLogout() {
+    await fetch('/auth/logout', { method: 'POST' });
+    location.reload();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('loginOverlay').classList.contains('show')) doLogin();
+  });
+</script>
+</body>
+</html>
