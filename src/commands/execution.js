@@ -26,10 +26,15 @@ export function registerExecutionCommands(program) {
         if (opts.status) params.status = opts.status;
 
         const spinner = ora('Fetching executions...').start();
-        const data = await apiRequest(client, 'GET', '/executions', { params });
+        const [data, wfData] = await Promise.all([
+          apiRequest(client, 'GET', '/executions', { params }),
+          apiRequest(client, 'GET', '/workflows', { params: { limit: 250 } }).catch(() => ({ data: [] })),
+        ]);
         spinner.stop();
 
         const executions = Array.isArray(data) ? data : (data.data ?? []);
+        const workflows = Array.isArray(wfData) ? wfData : (wfData.data ?? []);
+        const wfNames = Object.fromEntries(workflows.map(w => [w.id, w.name]));
 
         if (executions.length === 0) {
           printInfo('No executions found.');
@@ -44,13 +49,15 @@ export function registerExecutionCommands(program) {
               e.startedAt && e.stoppedAt
                 ? `${((new Date(e.stoppedAt) - new Date(e.startedAt)) / 1000).toFixed(1)}s`
                 : '—';
+            const statusVal = e.status ?? (e.finished ? 'success' : 'running');
             const status =
-              e.status === 'error'
-                ? chalk.red(e.status)
-                : e.status === 'success'
-                ? chalk.green(e.status)
-                : chalk.yellow(e.status ?? '—');
-            return [e.id, e.workflowId ?? '—', status, e.mode ?? '—', started, duration];
+              statusVal === 'error'
+                ? chalk.red('error')
+                : statusVal === 'success'
+                ? chalk.green('success')
+                : chalk.yellow(statusVal);
+            const wfName = wfNames[e.workflowId] ?? e.workflowId ?? '—';
+            return [e.id, wfName, status, e.mode ?? '—', started, duration];
           })
         );
       } catch (err) {
